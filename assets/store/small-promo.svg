@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0b0e"/>
+      <stop offset="1" stop-color="#1c1c22"/>
+    </linearGradient>
+  </defs>
+  <rect width="440" height="280" fill="url(#bg2)"/>
+  <g transform="translate(40,58)">
+    <rect width="86" height="86" rx="21" fill="#fafafa"/>
+    <g fill="none" stroke="#18181b" stroke-width="6.5" stroke-linecap="round">
+      <path d="M28 23 V63"/>
+      <path d="M58 23 V63"/>
+      <path d="M23 43 H63"/>
+    </g>
+  </g>
+  <g font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="150" y="98" fill="#fafafa" font-size="38" font-weight="700" letter-spacing="-1">HeaderForge</text>
+    <text x="151" y="132" fill="#a1a1aa" font-size="19" font-weight="400">HTTP header editor</text>
+  </g>
+  <text x="40" y="228" fill="#e4e4e7" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="400">Open source · Private · No tracking</text>
+</svg>
