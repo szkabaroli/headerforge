@@ -425,26 +425,6 @@ body {
   border-top: 1px solid hsl(var(--border));
 }
 
-/* ---------- Status ---------- */
-.status {
-  /* Always reserve this row so Chrome sizes the popup to include it —
-     otherwise a message that appears later gets clipped at the popup edge.
-     Only the opacity animates. */
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 16px;
-  font-size: 11px;
-  color: hsl(var(--muted-foreground));
-  text-align: center;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-.status.show {
-  opacity: 1;
-}
-
 /* Scrollbar */
 .list::-webkit-scrollbar {
   width: 8px;

@@ -60,8 +60,6 @@ function defaultState() {
 
 /** @type {State} */
 let state = defaultState();
-/** @type {ReturnType<typeof setTimeout>|null} */
-let statusTimer = null;
 
 const el = {
   master: document.getElementById("master-toggle"),
@@ -74,7 +72,6 @@ const el = {
   empty: document.getElementById("empty-state"),
   addBtn: document.getElementById("add-header"),
   clearBtn: document.getElementById("clear-all"),
-  status: document.getElementById("status"),
   rowTemplate: document.getElementById("row-template"),
   tabTemplate: document.getElementById("tab-template"),
 };
@@ -117,24 +114,10 @@ async function load() {
 
 /**
  * Persist the current state; the service worker re-syncs rules on change.
- * @param {string} [message] Optional status text to flash after saving.
  * @returns {Promise<void>}
  */
-async function persist(message) {
+async function persist() {
   await chrome.storage.local.set({ [STORAGE_KEY]: state });
-  if (message) flashStatus(message);
-}
-
-/**
- * Briefly show a status message that fades out on its own.
- * @param {string} text
- * @returns {void}
- */
-function flashStatus(text) {
-  el.status.textContent = text;
-  el.status.classList.add("show");
-  clearTimeout(statusTimer);
-  statusTimer = setTimeout(() => el.status.classList.remove("show"), 1600);
 }
 
 /* ---------- Render ---------- */
