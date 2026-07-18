@@ -9,7 +9,7 @@ const SEED = {
         id: "p1",
         name: "Staging API",
         enabled: true,
-        urlFilter: "https://api.staging.example.com",
+        urlFilters: ["https://api.staging.example.com", "staging.example.com"],
         headers: [
           {
             id: "h1",
@@ -41,7 +41,7 @@ const SEED = {
         id: "p2",
         name: "Local debug",
         enabled: false,
-        urlFilter: "",
+        urlFilters: [],
         headers: [],
       },
     ],

@@ -260,6 +260,31 @@ body {
   font-weight: 400;
 }
 
+/* URL filters (one profile → many sites) */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filters:empty {
+  display: none;
+}
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.filter-item .filter-input {
+  flex: 1;
+  min-width: 0;
+}
+.btn-add-filter {
+  align-self: flex-start;
+  height: 30px;
+  padding: 0 11px;
+  font-size: 12px;
+}
+
 /* ---------- Inputs / selects ---------- */
 .input,
 .select {
@@ -406,8 +431,16 @@ body {
 
 /* ---------- Empty state ---------- */
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 168px;
   text-align: center;
   padding: 26px 16px;
+}
+.empty[hidden] {
+  display: none;
 }
 .empty p {
   font-size: 13px;

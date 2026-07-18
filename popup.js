@@ -20,7 +20,8 @@
  * @property {string} id        Stable unique id.
  * @property {string} name      Display name shown in the tab bar.
  * @property {boolean} enabled  Whether this profile contributes a rule.
- * @property {string} urlFilter declarativeNetRequest urlFilter; blank = all URLs.
+ * @property {string[]} urlFilters URL filters; the profile applies to any URL
+ *   matching ANY of these. Empty = all sites.
  * @property {Header[]} headers Headers belonging to this profile.
  */
 
@@ -44,7 +45,7 @@ function makeProfile(name) {
     id: uid(),
     name: name || "New profile",
     enabled: true,
-    urlFilter: "",
+    urlFilters: [],
     headers: [],
   };
 }
@@ -67,12 +68,14 @@ const el = {
   profileEnabled: document.getElementById("profile-enabled"),
   profileName: document.getElementById("profile-name"),
   deleteProfile: document.getElementById("delete-profile"),
-  urlFilter: document.getElementById("url-filter"),
+  filters: document.getElementById("filters"),
+  addFilter: document.getElementById("add-filter"),
   list: document.getElementById("header-list"),
   empty: document.getElementById("empty-state"),
   addBtn: document.getElementById("add-header"),
   clearBtn: document.getElementById("clear-all"),
   rowTemplate: document.getElementById("row-template"),
+  filterTemplate: document.getElementById("filter-template"),
   tabTemplate: document.getElementById("tab-template"),
 };
 
@@ -103,6 +106,7 @@ async function load() {
   const loaded = stored[STORAGE_KEY];
   if (loaded && Array.isArray(loaded.profiles) && loaded.profiles.length) {
     state = loaded;
+    state.profiles.forEach(migrateProfile);
     if (!state.profiles.some((p) => p.id === state.activeProfileId)) {
       state.activeProfileId = state.profiles[0].id;
     }
@@ -110,6 +114,19 @@ async function load() {
     state = defaultState();
   }
   render();
+}
+
+/**
+ * Migrate a profile's legacy single `urlFilter` string to a `urlFilters` array.
+ * @param {Profile & { urlFilter?: string }} profile
+ * @returns {void}
+ */
+function migrateProfile(profile) {
+  if (!Array.isArray(profile.urlFilters)) {
+    const legacy = (profile.urlFilter || "").trim();
+    profile.urlFilters = legacy ? [legacy] : [];
+  }
+  delete profile.urlFilter;
 }
 
 /**
@@ -171,8 +188,9 @@ function renderEditor() {
 
   el.profileEnabled.checked = profile.enabled;
   el.profileName.value = profile.name;
-  el.urlFilter.value = profile.urlFilter || "";
   el.deleteProfile.disabled = state.profiles.length <= 1;
+
+  renderFilters(profile);
 
   el.list.textContent = "";
   const hasHeaders = profile.headers.length > 0;
@@ -182,6 +200,44 @@ function renderEditor() {
   for (const header of profile.headers) {
     el.list.appendChild(renderRow(profile, header));
   }
+}
+
+/**
+ * Render the active profile's URL-filter inputs (one per entry).
+ * @param {Profile} profile
+ * @returns {void}
+ */
+function renderFilters(profile) {
+  el.filters.textContent = "";
+  profile.urlFilters.forEach((_, index) => {
+    el.filters.appendChild(renderFilter(profile, index));
+  });
+}
+
+/**
+ * Build one filter input row bound to `profile.urlFilters[index]`.
+ * @param {Profile} profile
+ * @param {number} index
+ * @returns {HTMLElement}
+ */
+function renderFilter(profile, index) {
+  const frag = el.filterTemplate.content.cloneNode(true);
+  const item = frag.querySelector(".filter-item");
+  const input = frag.querySelector(".filter-input");
+  const remove = frag.querySelector(".filter-remove");
+
+  input.value = profile.urlFilters[index];
+  input.addEventListener("input", () => {
+    profile.urlFilters[index] = input.value;
+    persist();
+  });
+  remove.addEventListener("click", () => {
+    profile.urlFilters.splice(index, 1);
+    renderFilters(profile);
+    persist();
+  });
+
+  return item;
 }
 
 /**
@@ -274,8 +330,13 @@ el.deleteProfile.addEventListener("click", () => {
   persist("Profile deleted");
 });
 
-el.urlFilter.addEventListener("input", () => {
-  activeProfile().urlFilter = el.urlFilter.value;
+el.addFilter.addEventListener("click", () => {
+  const profile = activeProfile();
+  profile.urlFilters.push("");
+  renderFilters(profile);
+  const inputs = el.filters.querySelectorAll(".filter-input");
+  const last = inputs[inputs.length - 1];
+  if (last) last.focus();
   persist();
 });
 

@@ -44,8 +44,12 @@
         </div>
 
         <div class="filter-row">
-          <label class="field-label" for="url-filter">Applies to <span class="muted">(URL filter — blank = all sites)</span></label>
-          <input type="text" id="url-filter" class="input" placeholder="e.g. https://api.example.com  ·  example.com  ·  /v2/" autocomplete="off" spellcheck="false" />
+          <label class="field-label">Applies to <span class="muted">(matches ANY filter — no filters = all sites)</span></label>
+          <div class="filters" id="filters"></div>
+          <button class="btn btn-ghost btn-add-filter" id="add-filter">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            Add site filter
+          </button>
         </div>
 
         <div class="list" id="header-list" aria-label="Header rules"></div>
@@ -88,6 +92,15 @@
         <input type="text" class="input row-value" placeholder="Value" autocomplete="off" spellcheck="false" />
 
         <button class="btn btn-icon row-remove" title="Remove header" aria-label="Remove header">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+    </template>
+
+    <template id="filter-template">
+      <div class="filter-item">
+        <input type="text" class="input filter-input" placeholder="e.g. https://api.example.com  ·  example.com  ·  /v2/" autocomplete="off" spellcheck="false" />
+        <button class="btn btn-icon filter-remove" title="Remove filter" aria-label="Remove filter">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
       </div>

@@ -20,7 +20,8 @@
  * @property {string} id        Stable unique id.
  * @property {string} name      Display name shown in the tab bar.
  * @property {boolean} enabled  Whether this profile contributes a rule.
- * @property {string} urlFilter declarativeNetRequest urlFilter; blank = all URLs.
+ * @property {string[]} urlFilters declarativeNetRequest urlFilters; a profile
+ *   applies to any URL matching ANY of these. Empty = all URLs.
  * @property {Header[]} headers Headers belonging to this profile.
  */
 
@@ -65,23 +66,41 @@ const DEFAULT_STATE = {
  */
 async function getState() {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
-  return { ...DEFAULT_STATE, ...(stored[STORAGE_KEY] || {}) };
+  const state = { ...DEFAULT_STATE, ...(stored[STORAGE_KEY] || {}) };
+  (state.profiles || []).forEach(normalizeProfileFilters);
+  return state;
 }
 
 /**
- * Compile one profile into a single modifyHeaders rule.
- * @param {Profile} profile
- * @param {number} ruleId Unique dynamic-rule id to assign.
- * @returns {chrome.declarativeNetRequest.Rule|null} The rule, or null if the
- *   profile is disabled or has no active headers to contribute.
+ * Normalize a profile's filters to a `urlFilters` array, migrating the legacy
+ * single-string `urlFilter` field in place.
+ * @param {Profile & { urlFilter?: string }} profile
+ * @returns {void}
  */
-function buildRule(profile, ruleId) {
-  if (!profile.enabled) return null;
+function normalizeProfileFilters(profile) {
+  if (!Array.isArray(profile.urlFilters)) {
+    const legacy = (profile.urlFilter || "").trim();
+    profile.urlFilters = legacy ? [legacy] : [];
+  }
+  delete profile.urlFilter;
+}
+
+/**
+ * Compile one profile into modifyHeaders rules — one rule per URL filter (so a
+ * profile can target multiple sites), or a single site-wide rule if it has no
+ * filters.
+ * @param {Profile} profile
+ * @param {number} startId First unused dynamic-rule id.
+ * @returns {chrome.declarativeNetRequest.Rule[]} Zero or more rules. Empty if
+ *   the profile is disabled or has no active headers.
+ */
+function buildRules(profile, startId) {
+  if (!profile.enabled) return [];
 
   const active = (profile.headers || []).filter(
     (h) => h.enabled && h.name && h.name.trim() !== ""
   );
-  if (active.length === 0) return null;
+  if (active.length === 0) return [];
 
   /** @type {chrome.declarativeNetRequest.ModifyHeaderInfo[]} */
   const requestHeaders = [];
@@ -102,11 +121,22 @@ function buildRule(profile, ruleId) {
   if (requestHeaders.length) action.requestHeaders = requestHeaders;
   if (responseHeaders.length) action.responseHeaders = responseHeaders;
 
-  const condition = { resourceTypes: RESOURCE_TYPES };
-  const filter = (profile.urlFilter || "").trim();
-  if (filter) condition.urlFilter = filter;
+  const filters = (profile.urlFilters || [])
+    .map((f) => (f || "").trim())
+    .filter(Boolean);
 
-  return { id: ruleId, priority: 1, action, condition };
+  // One rule per filter; if there are none, a single rule that matches all URLs.
+  const conditions =
+    filters.length === 0
+      ? [{ resourceTypes: RESOURCE_TYPES }]
+      : filters.map((urlFilter) => ({ resourceTypes: RESOURCE_TYPES, urlFilter }));
+
+  return conditions.map((condition, i) => ({
+    id: startId + i,
+    priority: 1,
+    action,
+    condition,
+  }));
 }
 
 /**
@@ -118,14 +148,14 @@ async function syncRules() {
   const state = await getState();
 
   const rules = [];
+  let activeProfileCount = 0;
   if (state.enabled) {
     let ruleId = 1;
     for (const profile of state.profiles || []) {
-      const rule = buildRule(profile, ruleId);
-      if (rule) {
-        rules.push(rule);
-        ruleId += 1;
-      }
+      const profileRules = buildRules(profile, ruleId);
+      if (profileRules.length) activeProfileCount += 1;
+      rules.push(...profileRules);
+      ruleId += profileRules.length;
     }
   }
 
@@ -138,7 +168,7 @@ async function syncRules() {
       removeRuleIds,
       addRules: rules,
     });
-    await updateBadge(state, rules.length);
+    await updateBadge(state, activeProfileCount);
   } catch (err) {
     console.error("[HeaderForge] Failed to update rules:", err);
   }
