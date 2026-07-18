@@ -3,8 +3,42 @@
 // worker watches that key and compiles one declarativeNetRequest rule per
 // enabled profile.
 
+/**
+ * A single header modification within a profile.
+ * @typedef {Object} Header
+ * @property {string} id       Stable unique id.
+ * @property {boolean} enabled Whether this header is applied.
+ * @property {"request"|"response"} type Direction the header applies to.
+ * @property {"set"|"remove"} op Operation to perform.
+ * @property {string} name     Header name (e.g. "Authorization").
+ * @property {string} value    Header value; ignored when `op` is "remove".
+ */
+
+/**
+ * A named, independently-scoped set of headers.
+ * @typedef {Object} Profile
+ * @property {string} id        Stable unique id.
+ * @property {string} name      Display name shown in the tab bar.
+ * @property {boolean} enabled  Whether this profile contributes a rule.
+ * @property {string} urlFilter declarativeNetRequest urlFilter; blank = all URLs.
+ * @property {Header[]} headers Headers belonging to this profile.
+ */
+
+/**
+ * Persisted extension state (the value under {@link STORAGE_KEY}).
+ * @typedef {Object} State
+ * @property {boolean} enabled          Master switch for all profiles.
+ * @property {string|null} activeProfileId Id of the profile shown in the editor.
+ * @property {Profile[]} profiles       All configured profiles.
+ */
+
 const STORAGE_KEY = "headerforge:state";
 
+/**
+ * Create a fresh profile with a generated id.
+ * @param {string} [name] Optional display name.
+ * @returns {Profile}
+ */
 function makeProfile(name) {
   return {
     id: uid(),
@@ -15,12 +49,18 @@ function makeProfile(name) {
   };
 }
 
+/**
+ * Build the initial state containing one empty "Default" profile.
+ * @returns {State}
+ */
 function defaultState() {
   const p = makeProfile("Default");
   return { enabled: true, activeProfileId: p.id, profiles: [p] };
 }
 
+/** @type {State} */
 let state = defaultState();
+/** @type {ReturnType<typeof setTimeout>|null} */
 let statusTimer = null;
 
 const el = {
@@ -39,10 +79,17 @@ const el = {
   tabTemplate: document.getElementById("tab-template"),
 };
 
+/**
+ * @returns {string} A RFC-4122 v4 uuid (secure context in extension popups).
+ */
 function uid() {
   return crypto.randomUUID();
 }
 
+/**
+ * The profile currently shown in the editor, falling back to the first one.
+ * @returns {Profile}
+ */
 function activeProfile() {
   return (
     state.profiles.find((p) => p.id === state.activeProfileId) ||
@@ -50,6 +97,10 @@ function activeProfile() {
   );
 }
 
+/**
+ * Load persisted state (or seed a default) and render.
+ * @returns {Promise<void>}
+ */
 async function load() {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
   const loaded = stored[STORAGE_KEY];
@@ -64,11 +115,21 @@ async function load() {
   render();
 }
 
+/**
+ * Persist the current state; the service worker re-syncs rules on change.
+ * @param {string} [message] Optional status text to flash after saving.
+ * @returns {Promise<void>}
+ */
 async function persist(message) {
   await chrome.storage.local.set({ [STORAGE_KEY]: state });
   if (message) flashStatus(message);
 }
 
+/**
+ * Briefly show a status message that fades out on its own.
+ * @param {string} text
+ * @returns {void}
+ */
 function flashStatus(text) {
   el.status.textContent = text;
   el.status.classList.add("show");
@@ -78,12 +139,14 @@ function flashStatus(text) {
 
 /* ---------- Render ---------- */
 
+/** Re-render the whole popup from `state`. @returns {void} */
 function render() {
   el.master.checked = !!state.enabled;
   renderTabs();
   renderEditor();
 }
 
+/** Render the profile tab bar and the trailing "add profile" button. @returns {void} */
 function renderTabs() {
   el.tabs.textContent = "";
 
@@ -119,6 +182,7 @@ function renderTabs() {
   el.tabs.appendChild(add);
 }
 
+/** Render the active profile's controls and header rows. @returns {void} */
 function renderEditor() {
   const profile = activeProfile();
 
@@ -137,6 +201,12 @@ function renderEditor() {
   }
 }
 
+/**
+ * Build one interactive header row bound to `header` within `profile`.
+ * @param {Profile} profile Owning profile (edited in place on interaction).
+ * @param {Header} header   The header this row represents.
+ * @returns {HTMLElement} The populated `.row` element.
+ */
 function renderRow(profile, header) {
   const frag = el.rowTemplate.content.cloneNode(true);
   const row = frag.querySelector(".row");

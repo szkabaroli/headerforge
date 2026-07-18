@@ -57,4 +57,4 @@ Unlike some popular header tools, HeaderForge is intentionally minimal and audit
 
 ## License
 
-MIT — do whatever you want; audit everything.
+MIT
