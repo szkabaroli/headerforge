@@ -55,6 +55,16 @@ Unlike some popular header tools, HeaderForge is intentionally minimal and audit
   versions; check `chrome://extensions` error logs if a header doesn't apply.
 - Response-header modification and some resource types depend on your Chrome version.
 
+## Privacy
+
+HeaderForge has no servers, sends no data, and includes no analytics — all
+configuration stays in your browser's local storage. See [PRIVACY.md](PRIVACY.md).
+
+## Publishing
+
+To package and publish to the Chrome Web Store, run `./build-zip.sh` and follow
+[PUBLISHING.md](PUBLISHING.md).
+
 ## License
 
 MIT
