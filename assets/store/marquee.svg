@@ -11,10 +11,10 @@
     <line x1="0" y1="140" x2="1400" y2="140"/>
     <line x1="0" y1="420" x2="1400" y2="420"/>
   </g>
-  <!-- logo -->
+  <!-- logo (canonical: dark square + white H, with a hairline ring for dark bg) -->
   <g transform="translate(150,190)">
-    <rect width="180" height="180" rx="42" fill="#fafafa"/>
-    <g fill="none" stroke="#18181b" stroke-width="13" stroke-linecap="round">
+    <rect width="180" height="180" rx="42" fill="#18181b" stroke="#3f3f46" stroke-width="2"/>
+    <g fill="none" stroke="#fafafa" stroke-width="13" stroke-linecap="round">
       <path d="M58 48 V132"/>
       <path d="M122 48 V132"/>
       <path d="M48 90 H132"/>
