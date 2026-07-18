@@ -1,8 +1,9 @@
 {
+  "type": "module",
   "name": "headerforge",
   "version": "1.2.0",
   "private": true,
-  "description": "Open-source Chrome extension for injecting HTTP headers — a clean ModHeader alternative.",
+  "description": "Open-source Chrome extension for injecting HTTP headers, a clean ModHeader alternative.",
   "scripts": {
     "test": "node --test",
     "build": "sh ./build-zip.sh",

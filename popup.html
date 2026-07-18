@@ -1,119 +1,266 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HeaderForge</title>
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <div class="app">
-      <header class="header">
-        <div class="brand">
-          <div class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5.5 4V20" /><path d="M18.5 4V20" /><path d="M4 12H20" />
-            </svg>
-          </div>
-          <div class="brand-text">
-            <span class="brand-title">HeaderForge</span>
-            <span class="brand-sub">Header injection</span>
-          </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>HeaderForge</title>
+        <link rel="stylesheet" href="popup.css" />
+    </head>
+    <body>
+        <div class="app">
+            <header class="header">
+                <div class="brand">
+                    <div class="brand-mark" aria-hidden="true">
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="18"
+                            height="18"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M5.5 4V20" />
+                            <path d="M18.5 4V20" />
+                            <path d="M4 12H20" />
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-title">HeaderForge</span>
+                        <span class="brand-sub">Header injection</span>
+                    </div>
+                </div>
+
+                <label class="switch" title="Enable / disable all profiles">
+                    <input type="checkbox" id="master-toggle" />
+                    <span class="switch-track"
+                        ><span class="switch-thumb"></span
+                    ></span>
+                </label>
+            </header>
+
+            <!-- Profile tabs -->
+            <nav class="tabs" id="tabs" aria-label="Profiles"></nav>
+
+            <!-- Active profile editor -->
+            <section class="profile" id="profile-editor">
+                <div class="profile-bar">
+                    <label class="switch switch-sm" title="Enable this profile">
+                        <input type="checkbox" id="profile-enabled" />
+                        <span class="switch-track"
+                            ><span class="switch-thumb"></span
+                        ></span>
+                    </label>
+                    <input
+                        type="text"
+                        id="profile-name"
+                        class="input profile-name"
+                        placeholder="Profile name"
+                        autocomplete="off"
+                        spellcheck="false"
+                    />
+                    <button
+                        class="btn btn-icon"
+                        id="delete-profile"
+                        title="Delete this profile"
+                        aria-label="Delete profile"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="15"
+                            height="15"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            <path
+                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+                            />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="filter-row">
+                    <label class="field-label"
+                        >Applies to
+                        <span class="muted"
+                            >(match any of these, or leave empty for all
+                            sites)</span
+                        ></label
+                    >
+                    <div class="filters" id="filters"></div>
+                    <button
+                        class="btn btn-ghost btn-add-filter"
+                        id="add-filter"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="14"
+                            height="14"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M12 5v14" />
+                            <path d="M5 12h14" />
+                        </svg>
+                        Add site filter
+                    </button>
+                </div>
+
+                <div
+                    class="list"
+                    id="header-list"
+                    aria-label="Header rules"
+                ></div>
+
+                <div class="empty" id="empty-state" hidden>
+                    <p>No headers in this profile.</p>
+                    <p class="muted">Add one to start modifying traffic.</p>
+                </div>
+
+                <div class="footer">
+                    <button class="btn btn-primary" id="add-header">
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M12 5v14" />
+                            <path d="M5 12h14" />
+                        </svg>
+                        Add header
+                    </button>
+                    <button
+                        class="btn btn-ghost"
+                        id="clear-all"
+                        title="Remove every header in this profile"
+                    >
+                        Clear
+                    </button>
+                </div>
+            </section>
         </div>
 
-        <label class="switch" title="Enable / disable all profiles">
-          <input type="checkbox" id="master-toggle" />
-          <span class="switch-track"><span class="switch-thumb"></span></span>
-        </label>
-      </header>
+        <template id="row-template">
+            <div class="row">
+                <label class="checkbox" title="Enable this header">
+                    <input type="checkbox" class="row-enabled" />
+                    <span class="checkbox-box">
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="12"
+                            height="12"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="3"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                    </span>
+                </label>
 
-      <!-- Profile tabs -->
-      <nav class="tabs" id="tabs" aria-label="Profiles"></nav>
+                <select class="select row-type" title="Header direction">
+                    <option value="request">Req</option>
+                    <option value="response">Res</option>
+                </select>
 
-      <!-- Active profile editor -->
-      <section class="profile" id="profile-editor">
-        <div class="profile-bar">
-          <label class="switch switch-sm" title="Enable this profile">
-            <input type="checkbox" id="profile-enabled" />
-            <span class="switch-track"><span class="switch-thumb"></span></span>
-          </label>
-          <input type="text" id="profile-name" class="input profile-name" placeholder="Profile name" autocomplete="off" spellcheck="false" />
-          <button class="btn btn-icon" id="delete-profile" title="Delete this profile" aria-label="Delete profile">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-          </button>
-        </div>
+                <select class="select row-op" title="Operation">
+                    <option value="set">Set</option>
+                    <option value="remove">Remove</option>
+                </select>
 
-        <div class="filter-row">
-          <label class="field-label">Applies to <span class="muted">(matches ANY filter — no filters = all sites)</span></label>
-          <div class="filters" id="filters"></div>
-          <button class="btn btn-ghost btn-add-filter" id="add-filter">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-            Add site filter
-          </button>
-        </div>
+                <input
+                    type="text"
+                    class="input row-name"
+                    placeholder="Header name"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <input
+                    type="text"
+                    class="input row-value"
+                    placeholder="Value"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
 
-        <div class="list" id="header-list" aria-label="Header rules"></div>
+                <button
+                    class="btn btn-icon row-remove"
+                    title="Remove header"
+                    aria-label="Remove header"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        width="15"
+                        height="15"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                    </svg>
+                </button>
+            </div>
+        </template>
 
-        <div class="empty" id="empty-state" hidden>
-          <p>No headers in this profile.</p>
-          <p class="muted">Add one to start modifying traffic.</p>
-        </div>
+        <template id="filter-template">
+            <div class="filter-item">
+                <input
+                    type="text"
+                    class="input filter-input"
+                    placeholder="e.g. https://api.example.com  ·  example.com  ·  /v2/"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <button
+                    class="btn btn-icon filter-remove"
+                    title="Remove filter"
+                    aria-label="Remove filter"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        width="15"
+                        height="15"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                    </svg>
+                </button>
+            </div>
+        </template>
 
-        <div class="footer">
-          <button class="btn btn-primary" id="add-header">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-            Add header
-          </button>
-          <button class="btn btn-ghost" id="clear-all" title="Remove every header in this profile">Clear</button>
-        </div>
-      </section>
-    </div>
+        <template id="tab-template">
+            <button class="tab" role="tab">
+                <span class="tab-dot" aria-hidden="true"></span>
+                <span class="tab-name"></span>
+            </button>
+        </template>
 
-    <template id="row-template">
-      <div class="row">
-        <label class="checkbox" title="Enable this header">
-          <input type="checkbox" class="row-enabled" />
-          <span class="checkbox-box">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-          </span>
-        </label>
-
-        <select class="select row-type" title="Header direction">
-          <option value="request">Req</option>
-          <option value="response">Res</option>
-        </select>
-
-        <select class="select row-op" title="Operation">
-          <option value="set">Set</option>
-          <option value="remove">Remove</option>
-        </select>
-
-        <input type="text" class="input row-name" placeholder="Header name" autocomplete="off" spellcheck="false" />
-        <input type="text" class="input row-value" placeholder="Value" autocomplete="off" spellcheck="false" />
-
-        <button class="btn btn-icon row-remove" title="Remove header" aria-label="Remove header">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-      </div>
-    </template>
-
-    <template id="filter-template">
-      <div class="filter-item">
-        <input type="text" class="input filter-input" placeholder="e.g. https://api.example.com  ·  example.com  ·  /v2/" autocomplete="off" spellcheck="false" />
-        <button class="btn btn-icon filter-remove" title="Remove filter" aria-label="Remove filter">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-      </div>
-    </template>
-
-    <template id="tab-template">
-      <button class="tab" role="tab">
-        <span class="tab-dot" aria-hidden="true"></span>
-        <span class="tab-name"></span>
-      </button>
-    </template>
-
-    <script src="rules.js"></script>
-    <script src="popup.js"></script>
-  </body>
+        <script type="module" src="popup.js"></script>
+    </body>
 </html>

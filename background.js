@@ -1,7 +1,7 @@
-// HeaderForge — service worker
-// Reads state from chrome.storage.local and translates each enabled profile
-// into its own dynamic declarativeNetRequest rule. Profiles are scoped by
-// their own URL filter, so different sites can get different headers.
+// HeaderForge: service worker
+// Reads state from chrome.storage.local and compiles it into dynamic
+// declarativeNetRequest rules (one per URL filter per profile), so different
+// sites can get different headers.
 
 /**
  * A single header modification within a profile.
@@ -33,9 +33,8 @@
  * @property {Profile[]} profiles       All configured profiles.
  */
 
-// Pure rule-compilation helpers (normalizeProfileFilters, compileRules).
-// Shared with the popup and unit tests; attaches to the worker's `self`.
-importScripts("rules.js");
+// Pure rule-compilation helpers, shared with the popup and the unit tests.
+import { compileRules, normalizeProfileFilters } from "./rules.js";
 
 const STORAGE_KEY = "headerforge:state";
 

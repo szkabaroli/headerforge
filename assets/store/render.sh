@@ -13,18 +13,32 @@ node -e '
 const fs = require("fs");
 let h = fs.readFileSync("../../popup.html","utf8");
 h = h.replace("href=\"popup.css\"", "href=\"../../popup.css\"");
-h = h.replace("<script src=\"rules.js\"></script>", "<script src=\"../../rules.js\"></script>");
-h = h.replace("<script src=\"popup.js\"></script>",
-  "<script src=\"mock-chrome.js\"></script>\n    <script src=\"../../popup.js\"></script>");
+// mock-chrome.js (classic) runs first; popup.js is a module that imports
+// ../../rules.js relative to itself. Point it at the repo root.
+h = h.replace("<script type=\"module\" src=\"popup.js\"></script>",
+  "<script src=\"mock-chrome.js\"></script>\n    <script type=\"module\" src=\"../../popup.js\"></script>");
 fs.writeFileSync("preview-popup.html", h);
 '
 
 # Screenshot (1280x800): render the REAL popup (popup.html/css/js) with mocked
 # chrome.storage sample data, at 2x, then downscale for crisp text.
-# Force the light color scheme so the store shot is deterministic across systems.
+# Served over HTTP (not file://) because popup.js is an ES module and Chrome
+# refuses to load modules over file://. Light color scheme is forced so the
+# store shot is deterministic across systems.
+PORT=8791
+python3 -m http.server "$PORT" --directory ../.. >/dev/null 2>&1 &
+SRV=$!
+trap 'kill "$SRV" 2>/dev/null || true' EXIT
+URL="http://localhost:$PORT/assets/store/preview.html"
+for _ in $(seq 1 50); do curl -sf "$URL" >/dev/null 2>&1 && break; sleep 0.1; done
+
 "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=2 \
   --window-size=1280,800 --blink-settings=preferredColorScheme=1 \
-  --screenshot=screenshot-2x.png "file://$PWD/preview.html"
+  --virtual-time-budget=1500 \
+  --screenshot=screenshot-2x.png "$URL"
+
+kill "$SRV" 2>/dev/null || true
+trap - EXIT
 magick screenshot-2x.png -resize 1280x800 screenshot-1280x800.png
 rm -f screenshot-2x.png
 

@@ -1,84 +1,80 @@
 # HeaderForge
 
-A small, **open-source** Chrome extension for injecting and modifying HTTP request/response
-headers on any site — a clean alternative to ModHeader, with a shadcn/ui-inspired interface.
+A Chrome extension for setting and removing HTTP request/response headers on the
+sites you choose.
 
-Unlike some popular header tools, HeaderForge is intentionally minimal and auditable:
-- No accounts, no telemetry, no remote code, no analytics.
-- Every file in this repo is plain, readable JS/CSS/HTML — read it before you install it.
-- Uses the modern `declarativeNetRequest` API, so header rewriting happens inside Chrome's
-  network stack — the extension never reads your request bodies or page contents.
+I started this after ModHeader (the popular header tool) shipped malware in an
+update. I wanted something that did the same job but was small enough to read in
+one sitting before trusting it. That's the whole pitch: it's a few hundred lines
+of plain HTML/CSS/JS, no build step, no accounts, no network calls of its own.
 
 ## Features
 
-- Set or remove **request** and **response** headers.
-- Per-header enable/disable checkbox.
-- Global master toggle to pause all rules instantly.
-- Optional URL filter to scope rules to specific hosts/paths.
-- Badge shows how many headers are active.
-- Automatic light/dark theme.
+- Set or remove request and response headers
+- Group headers into profiles (e.g. one for staging, one for a local API)
+- Scope each profile to one or more sites with URL filters, or leave it global
+- Enable/disable individual headers, a whole profile, or everything at once
+- Toolbar badge showing how many profiles are active
+- Light/dark theme following the system
 
-## Install (developer / unpacked)
+## Install (unpacked)
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode** (top-right).
-3. Click **Load unpacked** and select this folder.
-4. Pin the extension and click the toolbar icon to open the popup.
+1. Open `chrome://extensions`
+2. Turn on Developer mode (top-right)
+3. Load unpacked, and pick this folder
+4. Pin the icon and click it to open the popup
 
 ## Usage
 
-1. Click **Add header**.
-2. Choose direction (**Req**/**Res**) and operation (**Set**/**Remove**).
-3. Type a header name and value (value is hidden for *Remove*).
-4. (Optional) Enter a **URL filter**, e.g. `https://api.example.com` — leave blank to
-   apply to every site. The filter uses `declarativeNetRequest` `urlFilter` matching.
-5. Toggle individual headers or the master switch as needed. Changes apply immediately.
+Click **Add header**, pick the direction (Req/Res) and operation (Set/Remove),
+and type a name and value. Under **Applies to**, add one or more URL filters to
+limit a profile to certain sites; leave it empty to match everything. Changes
+take effect immediately.
+
+Filters use `declarativeNetRequest` matching: a plain string matches any URL
+containing it (`example.com`), and `|` anchors the start/end
+(`|https://api.example.com`).
 
 ## How it works
 
-- `popup.js` owns the UI and persists state to `chrome.storage.local`.
-- `background.js` (service worker) watches storage and compiles the active headers into a
-  single dynamic `declarativeNetRequest` rule. Disabled headers and the master-off state
-  produce no rule at all.
+`popup.js` is the UI and saves state to `chrome.storage.local`. `background.js`
+watches that storage and compiles it into dynamic `declarativeNetRequest`
+rules, one per URL filter per profile. Because the browser applies those rules
+itself, the extension never sees your request or page contents, which is also
+why it only needs `declarativeNetRequest` + `storage` rather than `webRequest`.
+
+The rule-building logic lives in `rules.js` on its own so it can be unit-tested.
 
 ## Permissions
 
-| Permission | Why |
-|---|---|
-| `declarativeNetRequest` | Rewrite headers via Chrome's network rules |
-| `storage` | Persist your header list locally |
-| `host_permissions: <all_urls>` | Allow header rules to apply to any site you visit |
-
-## Limitations
-
-- `declarativeNetRequest` cannot modify a handful of protected headers in some Chrome
-  versions; check `chrome://extensions` error logs if a header doesn't apply.
-- Response-header modification and some resource types depend on your Chrome version.
+| Permission               | Why                                           |
+| ------------------------ | --------------------------------------------- |
+| `declarativeNetRequest`  | Apply the header rules                        |
+| `storage`                | Save your profiles locally                    |
+| `<all_urls>` host access | Let rules apply to whichever sites you target |
 
 ## Testing
 
-The rule-compilation logic (state → declarativeNetRequest rules, filter
-migration, multi-site expansion) lives in `rules.js`, which is dependency-free
-and shared by the service worker, the popup, and the tests. Run the suite with
-Node's built-in test runner (no `npm install` needed):
+`rules.js` has no `chrome.*` dependencies and is loaded three ways from one
+file: `importScripts` in the worker, `<script>` in the popup, and `require` in
+the tests. So the tests exercise the exact code that ships. No dependencies:
 
 ```bash
-npm test          # or: node --test
+npm test    # node --test
 ```
 
-`rules.js` loads three ways from one file: `importScripts` in the service
-worker, `<script>` in the popup, and `require` in the tests — so the exact code
-that ships is the code under test.
+## Building
 
-## Privacy
+`npm run build` zips the runtime files into `dist/headerforge.zip` for the
+Chrome Web Store. See [PUBLISHING.md](PUBLISHING.md) for the store steps, and
+[PRIVACY.md](PRIVACY.md) for the privacy policy.
 
-HeaderForge has no servers, sends no data, and includes no analytics — all
-configuration stays in your browser's local storage. See [PRIVACY.md](PRIVACY.md).
+## Known limitations
 
-## Publishing
-
-To package and publish to the Chrome Web Store, run `./build-zip.sh` and follow
-[PUBLISHING.md](PUBLISHING.md).
+- Chrome protects some headers (a few `Sec-*` and other forbidden ones) and
+  won't let `declarativeNetRequest` change them.
+- All filters in a profile share its headers; if you need different headers per
+  site, make separate profiles.
 
 ## License
 

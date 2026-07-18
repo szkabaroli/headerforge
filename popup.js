@@ -1,7 +1,8 @@
-// HeaderForge — popup controller
+// HeaderForge: popup controller
 // Multi-profile UI. State is persisted to chrome.storage.local; the service
-// worker watches that key and compiles one declarativeNetRequest rule per
-// enabled profile.
+// worker watches that key and rebuilds the declarativeNetRequest rules.
+
+import { normalizeProfileFilters } from "./rules.js";
 
 /**
  * A single header modification within a profile.
@@ -106,7 +107,6 @@ async function load() {
   const loaded = stored[STORAGE_KEY];
   if (loaded && Array.isArray(loaded.profiles) && loaded.profiles.length) {
     state = loaded;
-    // normalizeProfileFilters is provided by rules.js (loaded before popup.js).
     state.profiles.forEach(normalizeProfileFilters);
     if (!state.profiles.some((p) => p.id === state.activeProfileId)) {
       state.activeProfileId = state.profiles[0].id;
@@ -165,7 +165,7 @@ function renderTabs() {
     state.activeProfileId = p.id;
     render();
     el.profileName.select();
-    persist("Profile added");
+    persist();
   });
   el.tabs.appendChild(add);
 }
@@ -262,16 +262,16 @@ function renderRow(profile, header) {
   enabled.addEventListener("change", () => {
     header.enabled = enabled.checked;
     row.classList.toggle("disabled", !enabled.checked);
-    persist(enabled.checked ? "Header enabled" : "Header disabled");
+    persist();
   });
   type.addEventListener("change", () => {
     header.type = type.value;
-    persist("Saved");
+    persist();
   });
   op.addEventListener("change", () => {
     header.op = op.value;
     applyOpState();
-    persist("Saved");
+    persist();
   });
   name.addEventListener("input", () => {
     header.name = name.value;
@@ -284,7 +284,7 @@ function renderRow(profile, header) {
   remove.addEventListener("click", () => {
     profile.headers = profile.headers.filter((h) => h.id !== header.id);
     renderEditor();
-    persist("Header removed");
+    persist();
   });
 
   return row;
@@ -294,13 +294,13 @@ function renderRow(profile, header) {
 
 el.master.addEventListener("change", () => {
   state.enabled = el.master.checked;
-  persist(el.master.checked ? "Rules active" : "All rules paused");
+  persist();
 });
 
 el.profileEnabled.addEventListener("change", () => {
   activeProfile().enabled = el.profileEnabled.checked;
   renderTabs();
-  persist(el.profileEnabled.checked ? "Profile enabled" : "Profile paused");
+  persist();
 });
 
 el.profileName.addEventListener("input", () => {
@@ -315,7 +315,7 @@ el.deleteProfile.addEventListener("click", () => {
   state.profiles = state.profiles.filter((p) => p.id !== id);
   state.activeProfileId = state.profiles[0].id;
   render();
-  persist("Profile deleted");
+  persist();
 });
 
 el.addFilter.addEventListener("click", () => {
@@ -350,7 +350,7 @@ el.clearBtn.addEventListener("click", () => {
   if (profile.headers.length === 0) return;
   profile.headers = [];
   renderEditor();
-  persist("Cleared all headers");
+  persist();
 });
 
 load();

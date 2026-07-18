@@ -1,16 +1,14 @@
 # Chrome Web Store listing copy
 
-Paste these into the corresponding fields in the Developer Dashboard.
+Paste into the matching fields in the Developer Dashboard.
 
----
-
-## Item name (up to 45 chars)
+## Item name
 
 HeaderForge — HTTP Header Editor
 
-## Summary (up to 132 chars)
+## Summary (132 char max)
 
-Add, edit, or remove HTTP request & response headers on any site. Open-source, private, no tracking. A clean ModHeader alternative.
+Set, edit, and remove HTTP request and response headers on the sites you choose. Open-source, local-only, no accounts.
 
 ## Category
 
@@ -18,40 +16,21 @@ Developer Tools
 
 ## Description
 
-Modify HTTP request and response headers on any website — set an
-Authorization token, spoof a User-Agent, add CORS headers, remove tracking
-headers, and more. HeaderForge is a fast, open-source header editor built for
-developers, QA engineers, and API testers.
+HeaderForge lets you set or remove HTTP request and response headers while you
+work: drop in an Authorization token, change a User-Agent, add CORS headers, or
+strip a header a site sends back.
 
-WHAT IT DOES
-• Set or remove any request or response header
-• Organize rules into profiles — one for staging, one for an API, one for
-  local debugging — and switch between them in a click
-• Scope each profile to specific sites with a URL filter, so your headers only
-  apply where you want them
-• Toggle individual headers, whole profiles, or everything at once with a
-  master switch
-• See at a glance how many profiles are active from the toolbar badge
+You group headers into profiles and point each profile at the sites it should
+affect, so your staging auth token doesn't leak onto production and a debug
+header only shows up where you want it. Toggle a single header, a whole profile,
+or everything from the toolbar.
 
-WHY INSTALL IT
-• Private by design — no accounts, no analytics, no tracking, no remote code.
-  Everything you configure stays in your browser's local storage and never
-  leaves your machine.
-• Auditable — it's fully open source. Read every line before you trust it:
-  https://github.com/szkabaroli/headerforge
-• Built on Manifest V3 — header changes are applied by Chrome's own networking
-  engine via declarativeNetRequest, so the extension cannot read your requests,
-  responses, or page content. It only tells the browser which headers to change.
-• Clean, modern interface with automatic light and dark themes.
+It's built on Manifest V3, so the browser applies your header rules itself and
+the extension never reads your requests or page content. Nothing is collected
+and nothing leaves your machine; your setup lives in local storage.
 
-PERFECT FOR
-• Adding auth tokens or custom headers while testing an API
-• Overriding User-Agent, Referer, or Accept-Language
-• Injecting or stripping CORS / security headers during development
-• Switching header sets between environments without editing code
+It's also open source, so you can read exactly what it does before installing:
+https://github.com/szkabaroli/headerforge
 
-HeaderForge is a transparent, minimal alternative to heavier header tools — no
-sign-in wall, no telemetry, just the feature you came for.
-
-Open source (MIT) • Privacy policy:
-https://github.com/szkabaroli/headerforge/blob/main/PRIVACY.md
+Handy for testing APIs, overriding User-Agent or Accept-Language, working with
+CORS during development, and switching header sets between environments.

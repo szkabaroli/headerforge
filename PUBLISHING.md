@@ -20,36 +20,36 @@ From the repo root:
 ```
 
 This produces `dist/headerforge.zip` containing only the files the extension
-ships (manifest, scripts, styles, popup, icons) — no README, git, or dev files.
+ships (manifest, scripts, styles, popup, icons) - no README, git, or dev files.
 
 ## 3. Create the listing
 
 In the dashboard, click **Add new item** and upload `dist/headerforge.zip`, then
 fill in the **Store listing** tab:
 
-- **Description** — reuse the top of `README.md`.
-- **Category** — Developer Tools.
-- **Language** — English.
-- **Screenshots** — at least one 1280×800 (or 640×400) PNG of the popup. Take one
+- **Description** - reuse the top of `README.md`.
+- **Category** - Developer Tools.
+- **Language** - English.
+- **Screenshots** - at least one 1280×800 (or 640×400) PNG of the popup. Take one
   with the extension loaded, or mock it up.
-- **Small promo tile** — 440×280 PNG (optional but recommended).
-- **Icon** — the store uses the 128×128 from the package automatically.
+- **Small promo tile** - 440×280 PNG (optional but recommended).
+- **Icon** - the store uses the 128×128 from the package automatically.
 
 ## 4. Privacy & permissions (this is where broad-permission extensions get stuck)
 
 On the **Privacy practices** tab:
 
-- **Single purpose** — e.g. "Modify HTTP request and response headers on sites the
+- **Single purpose** - e.g. "Modify HTTP request and response headers on sites the
   user chooses."
-- **Permission justifications** — you must justify each one:
-  - `declarativeNetRequest` — "Apply user-defined header set/remove rules via the
+- **Permission justifications** - you must justify each one:
+  - `declarativeNetRequest` - "Apply user-defined header set/remove rules via the
     browser's declarative networking engine."
-  - `storage` — "Persist the user's header configuration locally."
-  - Host permissions `<all_urls>` — "Header rules must be able to apply to whatever
+  - `storage` - "Persist the user's header configuration locally."
+  - Host permissions `<all_urls>` - "Header rules must be able to apply to whatever
     sites the user targets; the extension does not read request or page content."
-- **Data usage** — declare that you do **not** collect or transfer any user data
+- **Data usage** - declare that you do **not** collect or transfer any user data
   (all local). This matches `PRIVACY.md`.
-- **Privacy policy URL** — required because of the broad host permission. Use the
+- **Privacy policy URL** - required because of the broad host permission. Use the
   hosted `PRIVACY.md`, e.g.
   `https://github.com/szkabaroli/headerforge/blob/main/PRIVACY.md`.
 
