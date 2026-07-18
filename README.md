@@ -55,6 +55,21 @@ Unlike some popular header tools, HeaderForge is intentionally minimal and audit
   versions; check `chrome://extensions` error logs if a header doesn't apply.
 - Response-header modification and some resource types depend on your Chrome version.
 
+## Testing
+
+The rule-compilation logic (state → declarativeNetRequest rules, filter
+migration, multi-site expansion) lives in `rules.js`, which is dependency-free
+and shared by the service worker, the popup, and the tests. Run the suite with
+Node's built-in test runner (no `npm install` needed):
+
+```bash
+npm test          # or: node --test
+```
+
+`rules.js` loads three ways from one file: `importScripts` in the service
+worker, `<script>` in the popup, and `require` in the tests — so the exact code
+that ships is the code under test.
+
 ## Privacy
 
 HeaderForge has no servers, sends no data, and includes no analytics — all

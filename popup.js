@@ -106,7 +106,8 @@ async function load() {
   const loaded = stored[STORAGE_KEY];
   if (loaded && Array.isArray(loaded.profiles) && loaded.profiles.length) {
     state = loaded;
-    state.profiles.forEach(migrateProfile);
+    // normalizeProfileFilters is provided by rules.js (loaded before popup.js).
+    state.profiles.forEach(normalizeProfileFilters);
     if (!state.profiles.some((p) => p.id === state.activeProfileId)) {
       state.activeProfileId = state.profiles[0].id;
     }
@@ -114,19 +115,6 @@ async function load() {
     state = defaultState();
   }
   render();
-}
-
-/**
- * Migrate a profile's legacy single `urlFilter` string to a `urlFilters` array.
- * @param {Profile & { urlFilter?: string }} profile
- * @returns {void}
- */
-function migrateProfile(profile) {
-  if (!Array.isArray(profile.urlFilters)) {
-    const legacy = (profile.urlFilter || "").trim();
-    profile.urlFilters = legacy ? [legacy] : [];
-  }
-  delete profile.urlFilter;
 }
 
 /**

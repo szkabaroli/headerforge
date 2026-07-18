@@ -12,6 +12,7 @@ OUT_ZIP="$OUT_DIR/headerforge.zip"
 INCLUDE=(
   manifest.json
   background.js
+  rules.js
   popup.html
   popup.css
   popup.js

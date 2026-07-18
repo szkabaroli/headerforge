@@ -13,6 +13,7 @@ node -e '
 const fs = require("fs");
 let h = fs.readFileSync("../../popup.html","utf8");
 h = h.replace("href=\"popup.css\"", "href=\"../../popup.css\"");
+h = h.replace("<script src=\"rules.js\"></script>", "<script src=\"../../rules.js\"></script>");
 h = h.replace("<script src=\"popup.js\"></script>",
   "<script src=\"mock-chrome.js\"></script>\n    <script src=\"../../popup.js\"></script>");
 fs.writeFileSync("preview-popup.html", h);

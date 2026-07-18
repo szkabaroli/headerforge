@@ -33,25 +33,11 @@
  * @property {Profile[]} profiles       All configured profiles.
  */
 
-const STORAGE_KEY = "headerforge:state";
+// Pure rule-compilation helpers (normalizeProfileFilters, compileRules).
+// Shared with the popup and unit tests; attaches to the worker's `self`.
+importScripts("rules.js");
 
-const RESOURCE_TYPES = [
-  "main_frame",
-  "sub_frame",
-  "stylesheet",
-  "script",
-  "image",
-  "font",
-  "object",
-  "xmlhttprequest",
-  "ping",
-  "csp_report",
-  "media",
-  "websocket",
-  "webtransport",
-  "webbundle",
-  "other",
-];
+const STORAGE_KEY = "headerforge:state";
 
 /** @type {State} */
 const DEFAULT_STATE = {
@@ -72,92 +58,13 @@ async function getState() {
 }
 
 /**
- * Normalize a profile's filters to a `urlFilters` array, migrating the legacy
- * single-string `urlFilter` field in place.
- * @param {Profile & { urlFilter?: string }} profile
- * @returns {void}
- */
-function normalizeProfileFilters(profile) {
-  if (!Array.isArray(profile.urlFilters)) {
-    const legacy = (profile.urlFilter || "").trim();
-    profile.urlFilters = legacy ? [legacy] : [];
-  }
-  delete profile.urlFilter;
-}
-
-/**
- * Compile one profile into modifyHeaders rules — one rule per URL filter (so a
- * profile can target multiple sites), or a single site-wide rule if it has no
- * filters.
- * @param {Profile} profile
- * @param {number} startId First unused dynamic-rule id.
- * @returns {chrome.declarativeNetRequest.Rule[]} Zero or more rules. Empty if
- *   the profile is disabled or has no active headers.
- */
-function buildRules(profile, startId) {
-  if (!profile.enabled) return [];
-
-  const active = (profile.headers || []).filter(
-    (h) => h.enabled && h.name && h.name.trim() !== ""
-  );
-  if (active.length === 0) return [];
-
-  /** @type {chrome.declarativeNetRequest.ModifyHeaderInfo[]} */
-  const requestHeaders = [];
-  /** @type {chrome.declarativeNetRequest.ModifyHeaderInfo[]} */
-  const responseHeaders = [];
-
-  for (const h of active) {
-    /** @type {chrome.declarativeNetRequest.ModifyHeaderInfo} */
-    const directive = {
-      header: h.name.trim(),
-      operation: h.op === "remove" ? "remove" : "set",
-    };
-    if (directive.operation === "set") directive.value = h.value ?? "";
-    (h.type === "response" ? responseHeaders : requestHeaders).push(directive);
-  }
-
-  const action = { type: "modifyHeaders" };
-  if (requestHeaders.length) action.requestHeaders = requestHeaders;
-  if (responseHeaders.length) action.responseHeaders = responseHeaders;
-
-  const filters = (profile.urlFilters || [])
-    .map((f) => (f || "").trim())
-    .filter(Boolean);
-
-  // One rule per filter; if there are none, a single rule that matches all URLs.
-  const conditions =
-    filters.length === 0
-      ? [{ resourceTypes: RESOURCE_TYPES }]
-      : filters.map((urlFilter) => ({ resourceTypes: RESOURCE_TYPES, urlFilter }));
-
-  return conditions.map((condition, i) => ({
-    id: startId + i,
-    priority: 1,
-    action,
-    condition,
-  }));
-}
-
-/**
  * Rebuild the full dynamic rule set from the current state and install it,
  * replacing whatever is currently active.
  * @returns {Promise<void>}
  */
 async function syncRules() {
   const state = await getState();
-
-  const rules = [];
-  let activeProfileCount = 0;
-  if (state.enabled) {
-    let ruleId = 1;
-    for (const profile of state.profiles || []) {
-      const profileRules = buildRules(profile, ruleId);
-      if (profileRules.length) activeProfileCount += 1;
-      rules.push(...profileRules);
-      ruleId += profileRules.length;
-    }
-  }
+  const { rules, activeProfileCount } = compileRules(state);
 
   // Clear whatever is currently installed, then add the fresh set.
   const existing = await chrome.declarativeNetRequest.getDynamicRules();
